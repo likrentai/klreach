@@ -104,6 +104,16 @@ Share of people by buses an hour stopping within 400 m, weekday morning peak (7 
 | 08busaccess | Buses per hour within 400 m of each hexagon, and the gaps in the Rapid KL network |
 | 09buildbuses | Stage 3 page (`docs/buses.html`) and its data files in `docs/data` |
 
+## Refreshing the bus data (Stage 3)
+
+The bus page is a snapshot of the two sample days shown in its credit line, so it stays correct for that week even after the timetable files expire. Prasarana publishes new files every month or two (the MRT feeder file covers about six weeks; the Rapid KL file runs longer). A refresh is worth doing when the network changes noticeably (for example a new rail line with its feeder buses), when current figures are needed, or about once a year.
+
+1. Download both GTFS files again from data.gov.my into `data/raw`, keeping the same names: `gtfs_rapidbus_kl.zip` (https://api.data.gov.my/gtfs-static/prasarana?category=rapid-bus-kl) and `gtfs_rapidbus_mrtfeeder.zip` (https://api.data.gov.my/gtfs-static/prasarana?category=rapid-bus-mrtfeeder).
+2. In `07busdata`, Section 0, set `DAYS` to a weekday and a Saturday that fall inside the valid dates of both new files (07 prints which services run on each day; if one feed shows no services, pick other dates).
+3. Run `07busdata`, `08busaccess` and `09buildbuses` in this order.
+4. Upload `docs/buses.html` and the five files in `docs/data` to GitHub. The new sample dates appear on the page automatically.
+5. Update "Key findings (Stage 3)" in this README from `data/processed/bus_summary.json`.
+
 Built with Python (pandas, GeoPandas, H3, pydeck, OSMnx, pyosmium, SciPy) and, for the bus page, deck.gl and MapLibre in JavaScript.
 
 ## Coming next
