@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klang Valley Reach and Risk: a day of buses</title>
+<script src="https://unpkg.com/h3-js@4.4.0/dist/h3-js.umd.js"></script>
+<script src="https://unpkg.com/deck.gl@9.3.11/dist.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@5.14.0/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; font-family:"Segoe UI", Arial, sans-serif; }
+  #map { position:absolute; inset:0; }
+  #panel { position:absolute; top:12px; left:12px; z-index:10; width:min(var(--panel-w), calc(100vw - 48px));
+    max-height:calc(100vh - 48px); overflow-y:auto; box-sizing:border-box;
+    background:var(--panel-bg); color:var(--panel-text); padding:14px 16px; border-radius:8px; font-size:13px; line-height:1.45; }
+  #panel h1 { font-size:var(--title-size); margin:0 0 4px; font-weight:600; }
+  .sub { color:var(--panel-muted); margin-bottom:10px; }
+  .seg { display:flex; gap:0; margin:6px 0; border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.25); }
+  .seg button { flex:1; background:transparent; color:var(--panel-text); border:0; padding:6px 8px; font:inherit; cursor:pointer; }
+  .seg button.on { background:rgba(255,255,255,0.18); font-weight:600; }
+  .seg button:focus-visible, #play:focus-visible, #speed:focus-visible { outline:2px solid var(--link); outline-offset:-2px; }
+  #clockRow { display:flex; align-items:baseline; gap:12px; margin:10px 0 4px; }
+  #clock { font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:0.5px; }
+  #onroad { color:var(--panel-muted); }
+  #controls { display:flex; gap:8px; align-items:center; margin:4px 0; }
+  #play { background:rgba(255,255,255,0.15); color:var(--panel-text); border:0; border-radius:6px; padding:5px 12px; font:inherit; cursor:pointer; min-width:70px; }
+  #speed { background:rgba(255,255,255,0.10); color:var(--panel-text); border:0; border-radius:6px; padding:5px; font:inherit; }
+  #speed option { color:#111; }
+  #slider { width:100%; margin:6px 0 2px; }
+  #spark { width:100%; height:46px; cursor:pointer; display:block; }
+  .row { display:flex; align-items:center; gap:8px; margin:3px 0; }
+  .sw { width:14px; height:14px; border-radius:3px; flex:none; }
+  .line { width:18px; height:4px; border-radius:2px; flex:none; }
+  .lab { width:72px; flex:none; }
+  .bar { width:80px; flex:none; } .bar span { display:block; height:8px; border-radius:2px; }
+  .pct { color:var(--panel-muted); }
+  .small { color:var(--panel-muted); font-size:11px; margin-top:6px; }
+  .facts { margin-top:10px; }
+  .lnk { font-size:12px; margin-top:8px; }
+  #panel a { color:var(--link); }
+  .phone-only { display:none; }
+  html.phone .phone-only { display:block; }
+  html.phone .desk-only { display:none !important; }
+  html.phone #panel h1 { font-size:var(--phone-title-size); }
+  html.phone .sub, html.phone .small { display:none; }
+  html.phone .small.keep { display:block; }
+  #more summary { cursor:pointer; color:var(--link); }
+  #phoneToggle { background:transparent; border:0; color:var(--link); font:inherit; padding:6px 0 0; cursor:pointer; }
+  html.phone.folded .fold { display:none !important; }
+  html.phone .row { margin:1px 0; }
+  #more summary:focus-visible { outline:2px solid var(--link); }
+  #loading { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:20; background:var(--panel-bg);
+    color:var(--panel-text); padding:10px 16px; border-radius:8px; font-size:14px; display:none; }
+  label.chk { display:flex; gap:6px; align-items:center; margin-top:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="loading">Loading bus timetables ...</div>
+<div id="panel">
+  <h1 id="title"></h1>
+  <div class="sub" id="subtitle"></div>
+  <div class="seg desk-only" id="viewSeg" role="group" aria-label="View">
+    <button data-v="anim">Watch the buses</button><button data-v="freq">Buses per hour</button>
+  </div>
+  <div class="seg" id="daySeg" role="group" aria-label="Day">
+    <button data-d="weekday">Weekday</button><button data-d="weekend">Weekend</button>
+  </div>
+
+  <div id="animBox">
+    <div id="clockRow"><span id="clock">--:--</span><span id="onroad"></span></div>
+    <div id="controls">
+      <button id="play" aria-label="Play or pause">Pause</button>
+      <select id="speed" aria-label="Speed"></select>
+    </div>
+    <input id="slider" type="range" aria-label="Time of day">
+    <svg id="spark" viewBox="0 0 300 46" preserveAspectRatio="none" aria-label="Buses on the road through the day; click to jump"></svg>
+    <div id="feedLegend"></div>
+    <div class="small" id="animNote"></div>
+  </div>
+
+  <div id="freqBox">
+    <div class="seg" id="measureSeg" role="group" aria-label="Measure">
+      <button data-m="peak">Morning peak</button><button data-m="allday">All-day average</button>
+    </div>
+    <div id="freqLegend"></div>
+    <button id="phoneToggle" class="phone-only" aria-expanded="false"></button>
+    <label class="chk fold"><input type="checkbox" id="gapOnly"> <span id="gapLabel"></span></label>
+    <div class="small keep fold" id="gapNote"></div>
+    <div class="facts fold" id="facts"></div>
+  </div>
+
+  <div class="small phone-only fold" id="phoneNote" style="display:none"></div>
+  <div class="small keep fold" id="opNote"></div>
+  <details class="small" id="more"><summary id="moreTitle"></summary><div id="moreNotes"></div></details>
+  <div class="small" id="credit"></div>
+  <div id="links" class="fold"></div>
+</div>
+
+<script>
+const CFG = {"text": {"title": "A day of buses", "subtitle": "Every Rapid KL and MRT feeder bus through a typical weekday or weekend day, from the operators' published timetables.", "animNote": "Each line is one bus with a short trail. A whole day plays in about two minutes at normal speed.", "gapLabel": "Show only gaps in the Rapid KL network", "freqLegendTitle": "Buses per hour stopping within 400 m", "operatorsNote": "Only Rapid KL and MRT feeder buses (Prasarana) are shown: they are the only open bus timetables for the Klang Valley. Smart Selangor's free buses and other operators are missing, so places such as Klang and Sepang have more buses than shown.", "gapNote": "A gap: people live there, fewer than 4 of these buses an hour pass within 400 m in the weekday morning peak, and no rail station is within a 15-minute walk.", "moreTitle": "More about the data", "moreNotes": ["Rapid KL publishes most routes as 'about every N minutes', so their times are approximate. A few routes with impossible timetable times are timed at 20 km/h.", "'Within 400 m' is a straight line from the centre of each hexagon (about 0.74 km²); the walk is usually longer."], "facts": {"weekday_peak": "Weekday morning peak: <b>14%</b> of people have 8 or more of these buses an hour within 400 m, <b>41%</b> have none. 62% live in a gap in the Rapid KL network (see the note on other operators).", "weekday_allday": "Weekday, all-day average: <b>11%</b> of people have 8 or more of these buses an hour within 400 m, <b>41%</b> have none.", "weekend_peak": "Weekend morning peak: <b>10%</b> of people have 8 or more of these buses an hour within 400 m, <b>42%</b> have none.", "weekend_allday": "Weekend, all-day average: <b>8%</b> of people have 8 or more of these buses an hour within 400 m, <b>42%</b> have none."}, "credit": "Timetables: Prasarana GTFS via data.gov.my (CC BY 4.0), sample days 2026-10-14 and 2026-10-17. Population: Kontur 2023-11-01 (CC BY 4.0). Basemap: © CARTO, © OpenStreetMap contributors."}, "links": [["index.html", "See the 15-minute walking map (Stage 2)"], ["population.html", "See where people live (Stage 1)"]], "startView": "anim", "feeds": ["Rapid KL bus", "MRT feeder bus"], "anim": {"mapStyle": "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json", "view": {"latitude": 3.1, "longitude": 101.62, "zoom": 10.6, "pitch": 45, "bearing": -15}, "feedColours": [[255, 176, 59, 230], [64, 196, 255, 230]], "trailSeconds": 300, "width": 2, "opacity": 0.9, "timeStart": 18000, "timeEnd": 91800, "startTime": 23400.0, "autoplay": true, "speeds": [["Slow", 300], ["Normal", 600], ["Fast", 1200]], "defaultSpeed": 1, "districtLine": [255, 255, 255, 60], "binSeconds": 1800}, "freq": {"mapStyle": "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json", "view": {"latitude": 3.0, "longitude": 101.6, "zoom": 10.0, "pitch": 40, "bearing": -15}, "breaks": [0.001, 2, 4, 8, 15, 30], "labels": ["none", "under 2", "2 to 4", "4 to 8", "8 to 15", "15 to 30", "30 or more"], "colours": ["#d9d9d9", "#fde0c5", "#facba6", "#f8b58b", "#e8705a", "#b8324f", "#6b1e5a"], "extruded": true, "elevationScale": 0.3, "coverage": 0.88, "opacity": 0.9, "fadedAlpha": 60, "gapColour": "#3b4cc0", "gapLegend": "Gap in the Rapid KL network", "districtLine": [60, 60, 60, 140]}, "panel": {"bg": "rgba(17, 17, 20, 0.82)", "text": "#f2f2f2", "muted": "#a8a8b3", "link": "#8ec1ff", "width": 400, "titleSize": 24}, "phone": {"enabled": true, "maxWidth": 768, "view": {"latitude": 3.25, "longitude": 101.62, "zoom": 8.6, "pitch": 0, "bearing": 0}, "titleSize": 18, "note": "On phones this page shows buses per hour only. Open it on a computer to watch the buses move.", "sharp": false, "extruded": false, "startFolded": true, "moreLabel": "More ▾", "lessLabel": "Less ▴"}, "tooltipStyle": {"backgroundColor": "#1b1b22", "color": "#f2f2f2", "fontSize": "13px", "fontFamily": "Segoe UI, Arial, sans-serif", "padding": "8px 10px", "lineHeight": "1.5"}};
+const root = document.documentElement.style;
+root.setProperty("--panel-bg", CFG.panel.bg); root.setProperty("--panel-text", CFG.panel.text);
+root.setProperty("--panel-muted", CFG.panel.muted); root.setProperty("--link", CFG.panel.link);
+root.setProperty("--panel-w", CFG.panel.width + "px"); root.setProperty("--title-size", CFG.panel.titleSize + "px");
+root.setProperty("--phone-title-size", CFG.phone.titleSize + "px");
+
+const isPhone = CFG.phone.enabled && (matchMedia(`(max-width: ${CFG.phone.maxWidth}px)`).matches ||
+                                      matchMedia("(pointer: coarse)").matches);
+if (isPhone) document.documentElement.classList.add("phone");
+
+const $ = id => document.getElementById(id);
+const state = { view: isPhone ? "freq" : CFG.startView, day: "weekday", measure: "peak",
+                time: CFG.anim.startTime, playing: !isPhone && CFG.anim.autoplay,
+                speed: CFG.anim.speeds[CFG.anim.defaultSpeed][1], gapOnly: false };
+
+// ---------- texts ----------
+$("title").textContent = CFG.text.title;
+$("subtitle").textContent = CFG.text.subtitle;
+$("animNote").textContent = CFG.text.animNote;
+$("gapLabel").textContent = CFG.text.gapLabel;
+$("opNote").textContent = CFG.text.operatorsNote;
+$("gapNote").textContent = CFG.text.gapNote;
+$("moreTitle").textContent = CFG.text.moreTitle;
+$("moreNotes").innerHTML = CFG.text.moreNotes.map(t => `<div class="small">${t}</div>`).join("");
+$("credit").textContent = CFG.text.credit;
+$("links").innerHTML = CFG.links.map(([h, t]) => `<div class="lnk"><a href="${h}">${t}</a></div>`).join("");
+const pn = $("phoneNote"); pn.textContent = CFG.phone.note; if (isPhone) pn.style.display = "block";
+// On phones the panel opens folded (title, switches and legend) so the map stays visible.
+const fold = f => { document.documentElement.classList.toggle("folded", f);
+  $("phoneToggle").textContent = f ? CFG.phone.moreLabel : CFG.phone.lessLabel; $("phoneToggle").setAttribute("aria-expanded", String(!f)); };
+fold(isPhone && CFG.phone.startFolded);
+$("phoneToggle").onclick = () => fold(!document.documentElement.classList.contains("folded"));
+$("feedLegend").innerHTML = CFG.feeds.map((f, i) =>
+  `<div class="row"><span class="line" style="background:rgb(${CFG.anim.feedColours[i].slice(0,3).join(",")})"></span>${f}</div>`).join("");
+CFG.anim.speeds.forEach(([label, v], i) => {
+  const o = document.createElement("option"); o.value = v; o.textContent = label;
+  if (i === CFG.anim.defaultSpeed) o.selected = true; $("speed").appendChild(o); });
+$("slider").min = CFG.anim.timeStart; $("slider").max = CFG.anim.timeEnd; $("slider").step = 60;
+
+// ---------- data ----------
+const cache = {};
+function getJSON(url) {
+  if (!cache[url]) cache[url] = fetch(url).then(r => { if (!r.ok) throw new Error(url + " " + r.status); return r.json(); });
+  return cache[url];
+}
+let patterns = null;
+const trips = {};
+async function loadTrips(day) {
+  if (trips[day]) return trips[day];
+  $("loading").style.display = "block";
+  const [P, R] = await Promise.all([getJSON("data/bus_paths.json"), getJSON(`data/bus_runs_${day}.json`)]);
+  if (!patterns) patterns = P.patterns.map(([f, flat, t]) => {
+    const path = new Array(t.length);
+    for (let i = 0; i < t.length; i++) path[i] = [flat[2 * i], flat[2 * i + 1]];
+    return { f, path, t };
+  });
+  // Group the runs into time bins by start time, one layer per bin, so the browser
+  // only draws the few bins that can have buses on the road at the current time.
+  const bins = [];
+  for (const [p, s] of R.runs) {
+    const q = patterns[p], ts = new Float32Array(q.t.length);
+    for (let i = 0; i < ts.length; i++) ts[i] = q.t[i] + s;
+    const b = Math.max(0, Math.floor((s - CFG.anim.timeStart) / CFG.anim.binSeconds));
+    if (!bins[b]) bins[b] = { start: CFG.anim.timeStart + b * CFG.anim.binSeconds, end: 0, list: [] };
+    bins[b].list.push({ path: q.path, ts, f: q.f });
+    bins[b].end = Math.max(bins[b].end, ts[ts.length - 1]);
+  }
+  trips[day] = { bins: bins.filter(Boolean), count: R.count, t0: R.t0 };
+  $("loading").style.display = "none";
+  return trips[day];
+}
+
+// ---------- helpers ----------
+const fmt = s => { const m = Math.floor(s / 60) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
+const hexRGB = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const BAND_RGB = CFG.freq.colours.map(hexRGB), GAP_RGB = hexRGB(CFG.freq.gapColour);
+function band(v) { let k = 0; for (let i = 0; i < CFG.freq.breaks.length; i++) if (v >= CFG.freq.breaks[i]) k = i + 1; return k; }
+const COL = { weekday_peak: 2, weekday_allday: 3, weekend_peak: 4, weekend_allday: 5 };
+
+// ---------- map ----------
+const startView = isPhone ? CFG.phone.view : (state.view === "anim" ? CFG.anim.view : CFG.freq.view);
+const deckgl = new deck.DeckGL({
+  container: "map",
+  mapStyle: state.view === "anim" ? CFG.anim.mapStyle : CFG.freq.mapStyle,
+  initialViewState: startView,
+  controller: true,
+  useDevicePixels: isPhone ? CFG.phone.sharp : true,
+  getTooltip: ({ object, layer }) => {
+    if (!object || !layer || layer.id !== "hex") return null;
+    const r = object, k = `${state.day}_${state.measure}`;
+    const per = v => v >= 1 ? `${v.toFixed(v < 10 ? 1 : 0)} an hour` : (v > 0 ? "less than 1 an hour" : "none");
+    return { html: `<b>${r[7]}</b> &middot; ${r[1].toLocaleString()} people<br/>` +
+      `<b>${per(r[COL[k]])}</b> (${state.day}, ${state.measure === "peak" ? "7 to 9 am" : "all-day average"})<br/>` +
+      `Weekday peak ${per(r[2])}, weekend all-day ${per(r[5])}<br/>` +
+      `${r[8]} bus stops and ${r[9]} route patterns within 400 m<br/>` +
+      `Rail station: ${r[10] < 0 ? "over 75 min" : Math.round(r[10]) + " min"} walk` +
+      (r[6] ? `<br/><b>Gap in the Rapid KL network</b>` : ""),
+      style: CFG.tooltipStyle };
+  },
+});
+
+let hexRows = [], districts = null, summary = null;
+
+function layers() {
+  const out = [];
+  if (districts) out.push(new deck.GeoJsonLayer({ id: "districts", data: districts, stroked: true, filled: false,
+    getLineColor: state.view === "anim" ? CFG.anim.districtLine : CFG.freq.districtLine, lineWidthMinPixels: 1,
+    updateTriggers: { getLineColor: state.view } }));
+  if (state.view === "freq") {
+    const k = COL[`${state.day}_${state.measure}`], a = Math.round(CFG.freq.opacity * 255);
+    out.push(new deck.H3HexagonLayer({ id: "hex", data: hexRows, getHexagon: r => r[0],
+      getFillColor: r => state.gapOnly ? (r[6] ? [...GAP_RGB, a] : [...BAND_RGB[band(r[k])], CFG.freq.fadedAlpha])
+                                       : [...BAND_RGB[band(r[k])], a],
+      extruded: isPhone ? CFG.phone.extruded : CFG.freq.extruded,
+      getElevation: r => state.gapOnly && !r[6] ? 0 : r[1],
+      elevationScale: CFG.freq.elevationScale, coverage: CFG.freq.coverage, pickable: true,
+      autoHighlight: !isPhone, updateTriggers: { getFillColor: [state.day, state.measure, state.gapOnly], getElevation: state.gapOnly } }));
+  } else if (trips[state.day]) {
+    const t = state.time, trail = CFG.anim.trailSeconds;
+    for (const b of trips[state.day].bins) out.push(new deck.TripsLayer({ id: `trips-${state.day}-${b.start}`,
+      data: b.list, visible: b.start <= t && b.end + trail >= t,
+      getPath: d => d.path, getTimestamps: d => d.ts, getColor: d => CFG.anim.feedColours[d.f],
+      widthMinPixels: CFG.anim.width, trailLength: trail, currentTime: t, fadeTrail: true, opacity: CFG.anim.opacity }));
+  }
+  return out;
+}
+const redraw = () => deckgl.setProps({ layers: layers() });
+
+// ---------- panel ----------
+function setOn(segId, attr, val) { document.querySelectorAll(`#${segId} button`).forEach(b => b.classList.toggle("on", b.dataset[attr] === val)); }
+function drawLegend() {
+  if (!summary) return;
+  const key = `${state.day}_${state.measure}`, shares = summary[key];
+  const rows = CFG.freq.labels.map((lab, i) => [lab, CFG.freq.colours[i], shares[lab] || 0]).reverse();
+  $("freqLegend").innerHTML = `<div class="small" style="margin:6px 0 4px">${CFG.text.freqLegendTitle}</div>` + rows.map(([lab, c, s]) =>
+    `<div class="row"><span class="sw" style="background:${c}"></span><span class="lab">${lab}</span>` +
+    `<span class="bar"><span style="width:${Math.min(80, s * 1.6)}px;background:${c}"></span></span><span class="pct">${s.toFixed(0)}% of people</span></div>`).join("") +
+    (state.gapOnly ? `<div class="row" style="margin-top:6px"><span class="sw" style="background:${CFG.freq.gapColour}"></span>` +
+      `<span>${CFG.freq.gapLegend}: ${summary.gap_share.toFixed(0)}% of people</span></div>` : "");
+  $("facts").innerHTML = CFG.text.facts[key];
+}
+function drawSpark() {
+  const T = trips[state.day]; const svg = $("spark"); if (!T) { svg.innerHTML = ""; return; }
+  const n = T.count.length, mx = Math.max(...T.count);
+  const pts = T.count.map((c, i) => `${(i / (n - 1) * 300).toFixed(1)},${(44 - c / mx * 40).toFixed(1)}`).join(" ");
+  const x = ((state.time / 60 - T.t0) / (n - 1) * 300).toFixed(1);
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="${CFG.panel.muted}" stroke-width="1.2"/>` +
+    `<line x1="${x}" x2="${x}" y1="0" y2="46" stroke="${CFG.panel.link}" stroke-width="1.5"/>`;
+}
+function drawClock() {
+  $("clock").textContent = fmt(state.time); $("slider").value = state.time;
+  const T = trips[state.day];
+  if (T) { const i = Math.round(state.time / 60) - T.t0; const c = T.count[Math.max(0, Math.min(T.count.length - 1, i))];
+    $("onroad").textContent = `${c.toLocaleString()} buses on the road`; }
+  drawSpark();
+}
+async function apply() {
+  setOn("viewSeg", "v", state.view); setOn("daySeg", "d", state.day); setOn("measureSeg", "m", state.measure);
+  $("animBox").style.display = state.view === "anim" ? "block" : "none";
+  $("freqBox").style.display = state.view === "freq" ? "block" : "none";
+  $("play").textContent = state.playing ? "Pause" : "Play";
+  deckgl.setProps({ mapStyle: state.view === "anim" ? CFG.anim.mapStyle : CFG.freq.mapStyle });
+  if (state.view === "anim") { await loadTrips(state.day); drawClock(); } else drawLegend();
+  redraw();
+}
+document.querySelectorAll("#viewSeg button").forEach(b => b.onclick = () => { state.view = b.dataset.v; apply(); });
+document.querySelectorAll("#daySeg button").forEach(b => b.onclick = () => { state.day = b.dataset.d; apply(); });
+document.querySelectorAll("#measureSeg button").forEach(b => b.onclick = () => { state.measure = b.dataset.m; apply(); });
+$("gapOnly").onchange = e => { state.gapOnly = e.target.checked; drawLegend(); redraw(); };
+$("play").onclick = () => { state.playing = !state.playing; $("play").textContent = state.playing ? "Pause" : "Play"; };
+$("speed").onchange = e => { state.speed = +e.target.value; };
+$("slider").oninput = e => { state.time = +e.target.value; drawClock(); redraw(); };
+$("spark").onclick = e => { const T = trips[state.day]; if (!T) return; const r = e.currentTarget.getBoundingClientRect();
+  state.time = (T.t0 + (e.clientX - r.left) / r.width * (T.count.length - 1)) * 60; drawClock(); redraw(); };
+
+// ---------- animation loop ----------
+let last = performance.now(), sinceDraw = 0;
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (state.view === "anim" && state.playing && trips[state.day]) {
+    state.time += dt * state.speed;
+    if (state.time > CFG.anim.timeEnd) state.time = CFG.anim.timeStart;
+    redraw(); sinceDraw += dt; if (sinceDraw > 0.2) { drawClock(); sinceDraw = 0; }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---------- start ----------
+(async () => {
+  const [H, D] = await Promise.all([getJSON("data/hex_buses.json"), getJSON("data/districts.json")]);
+  hexRows = H.rows; summary = H.summary; districts = D;
+  await apply();
+  requestAnimationFrame(tick);
+})().catch(err => { $("loading").style.display = "block"; $("loading").textContent = "Could not load the data: " + err.message; });
+</script>
+</body>
+</html>
