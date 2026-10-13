@@ -7,12 +7,20 @@ Interactive 3D maps of who can reach everyday services on foot in Malaysia's Kla
 - 15-minute walking map: https://likrentai.github.io/klreach/
 - Where people live: https://likrentai.github.io/klreach/population.html
 
+![Stage 2, the 15-minute walking map: hexagon colour shows how many of five everyday services are within a 15-minute walk, height shows population, and the tooltip lists the walking minutes to each service](docs/images/stage2_walk.png)
+*Stage 2: can you walk to everyday needs? Hover over (or tap) a hexagon to see the walking minutes to each service.*
+
+![Stage 1, where people live: 3D hexagon columns showing the number of people in each hexagon across the Klang Valley](docs/images/stage1_population.png)
+*Stage 1: where the Klang Valley lives.*
+
 ## What the maps show
 
 The Klang Valley (Kuala Lumpur, Putrajaya and the Selangor districts of Petaling, Gombak, Ulu Langat, Klang and Sepang) is divided into about 4,000 hexagons of about 0.74 km² each (H3 resolution 8).
 
 - **Stage 1, where people live:** column height and colour show the number of people in each hexagon.
 - **Stage 2, the 15-minute walk:** for every hexagon, the walking time along real streets and footpaths to the nearest clinic or hospital, school, park or playground, grocery and rail station. The colour shows how many of these five are within a 15-minute walk; the height still shows population. Hover over a hexagon to see the minutes to each service.
+
+On phones and tablets, both maps open flat (seen from above) and lighter, so they load smoothly; the 3D view is for computers.
 
 ## Key findings (Stage 2)
 
