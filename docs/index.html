@@ -33,7 +33,9 @@
   z-index: 100;
 }
     </style>
-  </head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>.kr-phone-note {display:none;} html.kr-phone .kr-phone-note {display:block;} html.kr-phone #kr-panel h1 {font-size:18px;}</style>
+</head>
   <body>
     <div id="deck-container">
     </div>
@@ -61,6 +63,7 @@
   <div class="facts">Within 15 minutes' walk: grocery 66% &middot; park 66% &middot; school 57% &middot; clinic 47% &middot; rail 18% of people.</div>
   <div class="small">Walking at 4.8 km/h, so 15 minutes = 1.2 km, from the centre of each hexagon (about 0.74 km²).</div><div class="small">Services and footpaths from OpenStreetMap, which misses some places, especially private clinics outside Kuala Lumpur.</div><div class="small">Kontur underestimates Putrajaya's population (about 8,600 vs about 110,000 in the 2020 census).</div>
   <div class="small">Data: © OpenStreetMap contributors (ODbL), OSM as of 2026-10-06; Kontur Population 2023-11-01 (CC BY 4.0); Rapid Rail and KTM Komuter stations. Grid: H3. Basemap: © CARTO.</div>
+  <div class="kr-phone-note" style="font-size:11px; margin-top:8px; opacity:0.8;">On phones the map is flat and lighter. Open it on a computer for the 3D view.</div>
   <div class="lnk" style="font-size:12px; margin-top:8px;"><a href="population.html">See where people live (Stage 1)</a></div>
 </div>
 
@@ -5020,7 +5023,7 @@
         60,
         140
       ],
-      "id": "473df254-bbf8-49fa-a7e3-df2c0e036551",
+      "id": "c07c2e54-ae98-42f6-8583-8c94a498bc21",
       "lineWidthMinPixels": 1,
       "stroked": true
     },
@@ -49121,7 +49124,7 @@
       "getElevation": "@@=population",
       "getFillColor": "@@=color",
       "getHexagon": "@@=h3",
-      "id": "98505566-06ac-4014-87c5-4a2888dbabf5",
+      "id": "f78a9899-ac40-4ad2-966f-91b4dd9cf849",
       "pickable": true
     }
   ],
@@ -49138,6 +49141,19 @@
     const customLibraries = null;
     const configuration = null;
 
+    // kr-phone-mode: lighter map on phones and tablets
+    const krPhone = window.matchMedia("(max-width: 768px)").matches
+                    || window.matchMedia("(pointer: coarse)").matches;
+    if (krPhone) {
+      const v = jsonInput.initialViewState;
+      v.zoom = 8.6; v.pitch = 0; v.bearing = 0;
+      v.latitude = 3.25; v.longitude = 101.62;
+      (jsonInput.layers || []).forEach(l => {
+        if (l["@@type"] === "H3HexagonLayer") { l.extruded = false; l.autoHighlight = false; }
+      });
+      jsonInput.useDevicePixels = false;
+      document.documentElement.classList.add("kr-phone");
+    }
     const deckInstance = createDeck({
                   container,
       jsonInput,
