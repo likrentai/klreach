@@ -57,12 +57,12 @@
   @media (max-width: 600px) { #kr-panel { font-size:12px; padding:10px 12px; } #kr-panel .small, #kr-panel .sub { display:none; } #kr-panel .lab { width:100px; } }
 </style>
 <div id="kr-panel">
-  <h1>Where did radar see the 2021 floods?</h1>
+  <h1>Where did radar identify the 2021 floods?</h1>
   <div class="sub">Colour: where Sentinel-1 radar images from 20 and 22 December 2021 show a flood signal. Height: people living there.</div>
   <div class="row"><span class="sw" style="background:#08306b;opacity:1.0"></span><span class="lab">Strong signal (both days)</span><span class="pct">18 hexagons, about 47,000 people</span></div><div class="row"><span class="sw" style="background:#4292c6;opacity:1.0"></span><span class="lab">Possible signal (one day)</span><span class="pct">195 hexagons, about 941,000 people</span></div><div class="row"><span class="sw" style="background:#d0d0d0;opacity:0.5"></span><span class="lab">No radar signal</span><span class="pct">does not mean it stayed dry</span></div>
   <div class="row"><span class="sw dot" style="background:rgb(255,111,0)"></span><span class="lab">Reported flooded</span><span class="pct">place from news reports</span></div>
   <div class="facts">Radar flagged 213 of 4,003 hexagons, where about 988,000 people live (12% of the Klang Valley). Not every flagged hexagon was flooded, and some flooded places are missed.</div>
-  <div class="small">This is a radar signal, not a full flood map. The images came 2 to 4 days after the peak (18 to 19 December), when much water had drained, and radar misses water between tall buildings and under trees. Treat it as a minimum.</div><div class="small">Strong: flagged on both days. Possible: flagged on one day. On two dry days (8 and 9 December) the same method flagged 30 hexagons as possible and 0 as strong, against 213 and 18 on the flood days.</div><div class="small">Each hexagon is about 0.74 km². Even in streets known to be flooded, radar flags only part of a hexagon, so the cut-off is low (5.0% of the hexagon).</div><div class="small">Orange circles: places reported flooded by news and Wikipedia; positions are approximate (town or area centre).</div><div class="small">Kontur underestimates Putrajaya's population (about 8,600 vs about 110,000 in the 2020 census).</div>
+  <div class="small">This is a radar signal, not a full flood map. The images came 2 to 4 days after the peak (18 to 19 December), when much water had drained, and radar misses water between tall buildings and under trees. Treat it as a minimum.</div><div class="small">Strong: flagged on both days. Possible: flagged on one day only, and 178 of the 195 possible hexagons come from the 22 December image alone, so no second image confirms them. On two dry days (8 and 9 December) the same method flagged 30 hexagons as possible and 0 as strong, against 213 and 18 on the flood days.</div><div class="small">Each hexagon is about 0.74 km². Even in streets known to be flooded, radar flags only part of a hexagon, so the cut-off is low (5.0% of the hexagon).</div><div class="small">Orange circles: places reported flooded by news and Wikipedia; positions are approximate (town or area centre).</div><div class="small">Kontur underestimates Putrajaya's population (about 8,600 vs about 110,000 in the 2020 census).</div>
   <div class="small">Radar: Copernicus Sentinel-1 (ESA), processed in Google Earth Engine. Ground and water layers: JRC Global Surface Water, MERIT Hydro, Copernicus DEM, ESA WorldCover 2021. Population: Kontur 2023-11-01 (CC BY 4.0). Grid: H3. Basemap: © CARTO, © OpenStreetMap contributors.</div>
   <div class="kr-phone-note" style="font-size:11px; margin-top:8px; opacity:0.8;">On phones the map is flat and lighter. Open it on a computer for the 3D view.</div>
   <div class="lnk" style="font-size:12px; margin-top:6px;"><a href="index.html">See the 15-minute walking map (Stage 2)</a></div><div class="lnk" style="font-size:12px; margin-top:6px;"><a href="population.html">See where people live (Stage 1)</a></div><div class="lnk" style="font-size:12px; margin-top:6px;"><a href="buses.html">See a day of buses (Stage 3)</a></div>
@@ -5024,7 +5024,7 @@
         60,
         140
       ],
-      "id": "a576eccb-44ab-4413-b93e-01beb795b60d",
+      "id": "213cdbf1-a6de-4ed7-bd42-d13f61b75d54",
       "lineWidthMinPixels": 1,
       "stroked": true
     },
@@ -42863,7 +42863,7 @@
       "getElevation": "@@=population",
       "getFillColor": "@@=color",
       "getHexagon": "@@=h3",
-      "id": "cd26cfe4-60c8-4526-9134-0816c1fe015b",
+      "id": "40b0719d-a421-45cb-b72e-a47ec346bc32",
       "pickable": true
     },
     {
@@ -42908,7 +42908,7 @@
       ],
       "getPosition": "@@=[lon, lat]",
       "getRadius": 300,
-      "id": "0d7c21eb-459a-47c2-b154-25352dc9a1df",
+      "id": "08231640-33fa-4716-a7fd-5d3f4c186d83",
       "lineWidthMinPixels": 2,
       "parameters": {
         "depthTest": false
