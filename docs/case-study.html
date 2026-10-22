@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flooded in 2021, served today? Klang Valley Reach and Risk case study</title>
+<meta name="description" content="A case study of five interactive hexagon maps of the Klang Valley: where people live, what they can reach on foot, how often buses pass, where radar saw the 2021 floods, and how well served the flooded areas are today.">
+<style>
+/* Fonts are stored next to this page (docs/fonts), both under the SIL Open Font License */
+@font-face { font-family: "Archivo"; src: url("fonts/archivo-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Archivo"; src: url("fonts/archivo-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/source-serif-4-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/source-serif-4-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/source-serif-4-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+
+:root {
+  --ink: #1d2433;        /* body text */
+  --muted: #5b6474;      /* captions and notes */
+  --track: #c9bfd0;      /* the line of hexagons in the margin */
+  --head: #532363;       /* headings: the deep plum of the Stage 1 population map */
+  --risk: #b2182b;       /* "poorly served" red, as on the Stage 5 story */
+  --flood: #08306b;      /* strong flood signal blue, as on the Stage 4 map */
+  --paper: #ffffff;
+  --wash: #f6f3f7;
+  --rule: #e2dde6;
+  --sans: "Archivo", "Segoe UI", Helvetica, Arial, sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 18px; line-height: 1.65; }
+a { color: var(--head); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 3px solid var(--risk); outline-offset: 2px; border-radius: 2px; }
+
+/* ---------- Opening ---------- */
+.opening { max-width: 1080px; margin: 0 auto; padding: 56px 24px 24px; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; align-items: start; }
+.opening h1 { font-family: var(--sans); font-weight: 700; font-size: 3.2rem; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 20px; color: var(--head); }
+.standfirst { font-size: 1.25rem; line-height: 1.5; margin: 0 0 24px; max-width: 34em; }
+.byline { font-family: var(--sans); font-weight: 600; font-size: 0.95rem; color: var(--muted); margin: 0 0 16px; }
+.links { list-style: none; margin: 0; padding: 0; font-family: var(--sans); font-weight: 600; font-size: 0.95rem; }
+.links li { margin: 6px 0; }
+.lead { margin: 0; }
+.lead img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+figcaption { font-size: 0.85rem; line-height: 1.45; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+/* ---------- The line: each section is a hexagon on a trail ---------- */
+.line { max-width: 1080px; margin: 0 auto; padding: 8px 24px 64px; }
+.line-inner { position: relative; padding-left: 64px; max-width: 800px; margin-left: -64px; }   /* the line sits in the margin, so text lines up with the title */
+.line-inner::before { content: ""; position: absolute; left: 14px; top: 18px; bottom: 30px; width: 5px; border-radius: 3px; background: var(--track); }
+section { position: relative; margin-top: 48px; }
+h2 { font-family: var(--sans); font-weight: 700; font-size: 1.6rem; line-height: 1.2; color: var(--head); margin: 0 0 12px; }
+h2::before { /* each section is a hexagon, as on the maps */
+  content: ""; position: absolute; left: -62px; top: 0; width: 28px; height: 30px;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 30'%3E%3Cpolygon points='14,2.5 25,8.75 25,21.25 14,27.5 3,21.25 3,8.75' fill='%23ffffff' stroke='%23532363' stroke-width='4.5' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+h3 { font-family: var(--sans); font-weight: 600; font-size: 1.15rem; line-height: 1.3; margin: 32px 0 6px; position: relative; color: var(--ink); }
+h3::before { /* a small filled hexagon for each finding */
+  content: ""; position: absolute; left: -55px; top: 3px; width: 14px; height: 16px; background: var(--head);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+h3.risk::before { background: var(--risk); }
+h3.flood::before { background: var(--flood); }
+p { margin: 0 0 14px; max-width: 40em; }
+.figure-line { font-family: var(--sans); margin: 4px 0 10px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.figure-line b { font-weight: 700; font-size: 2rem; line-height: 1; color: var(--head); }
+.figure-line.risk b { color: var(--risk); }
+.figure-line.flood b { color: var(--flood); }
+.figure-line span { font-weight: 600; font-size: 0.95rem; color: var(--muted); }
+ul.plain { margin: 0 0 14px; padding-left: 1.1em; max-width: 40em; }
+ul.plain li { margin: 6px 0; }
+.wide { margin: 18px 0 8px; }
+.wide img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+table { border-collapse: collapse; font-family: var(--sans); font-size: 0.92rem; margin: 8px 0 16px; }
+th, td { text-align: left; padding: 6px 18px 6px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+td.num.risk { color: var(--risk); font-weight: 700; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
+.terminus { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.9rem; color: var(--muted); }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 900px) {
+  .opening { grid-template-columns: 1fr; gap: 28px; padding-top: 32px; }
+  .opening h1 { font-size: 2.4rem; }
+  .lead { max-width: 420px; }
+  .line-inner { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  body { font-size: 17px; }
+  .opening, .line { padding-left: 16px; padding-right: 16px; }
+  .line-inner { padding-left: 36px; }
+  .line-inner::before { left: 6px; width: 4px; }
+  h2::before { left: -40px; width: 22px; height: 24px; top: 1px; }
+  h3::before { left: -34px; width: 11px; height: 13px; }
+  table { font-size: 0.85rem; }
+  th, td { padding-right: 10px; }
+}
+
+/* ---------- PDF and printing ---------- */
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+@media print {
+  body { font-size: 10.2pt; line-height: 1.47; }
+  a { color: var(--ink); text-decoration: none; }
+  .opening { grid-template-columns: minmax(0, 1fr) 62mm; gap: 8mm; padding: 0 0 4mm; max-width: none; }
+  .opening h1 { font-size: 26pt; }
+  .standfirst { font-size: 12.5pt; }
+  .web-link { display: none; }
+  .line { padding: 0; max-width: none; }
+  .line-inner { max-width: none; margin-left: 0; }
+  section { margin-top: 5.5mm; }
+  p, ul.plain li { orphans: 3; widows: 3; }
+  h2 { font-size: 15pt; break-after: avoid; }
+  h3 { font-size: 11.5pt; margin-top: 4mm; break-after: avoid; }
+  .figure-line b { font-size: 17pt; }
+  .wide { break-inside: avoid; }
+  .wide img { max-height: 85mm; width: auto; max-width: 100%; }
+  table { break-inside: avoid; }
+  .terminus { margin-top: 4mm; padding-top: 2mm; font-size: 8.5pt; }
+  .links a[href^="http"]::after { content: " (" attr(href) ")"; font-weight: 400; color: var(--muted); }
+  .links a[href$=".html"]::after { content: " (likrentai.github.io/klreach/" attr(href) ")"; font-weight: 400; color: var(--muted); }
+}
+</style>
+</head>
+<body>
+
+<header class="opening">
+  <div>
+    <h1>Flooded in 2021, served today?</h1>
+    <p class="standfirst">Five interactive maps of the Klang Valley, Malaysia, built on one grid of hexagons: where people live, what they can reach on foot, how often buses pass, where radar satellites saw the December 2021 floods, and how well served those places are today.</p>
+    <p class="byline">Lik Ren Tai, October 2026</p>
+    <ul class="links">
+      <li><a href="story.html">Read the story (Stage 5)</a></li>
+      <li><a href="population.html">Where people live (Stage 1)</a></li>
+      <li><a href="index.html">The 15-minute walking map (Stage 2)</a></li>
+      <li><a href="buses.html">A day of buses (Stage 3)</a></li>
+      <li><a href="floods.html">The 2021 floods (Stage 4)</a></li>
+      <li><a href="https://github.com/likrentai/klreach">Code, data notes and methods on GitHub</a></li>
+      <li class="web-link"><a href="case-study.pdf">Download this case study as a PDF</a></li>
+    </ul>
+  </div>
+  <figure class="lead">
+    <img src="images/cs_story_tsm.jpg" width="892" height="839" alt="The story map around Taman Sri Muda: flood-signal hexagons in red where people are poorly served today and blue where they are not, with a tooltip showing a strong flood signal and a walking score of 1 of 5">
+    <figcaption>Taman Sri Muda on the story map. Red hexagons had a flood signal in 2021 and are poorly served today; the tooltip shows one with a strong signal on both radar images and a walking score of 1 of 5.</figcaption>
+  </figure>
+</header>
+
+<main class="line">
+<div class="line-inner">
+
+<section>
+  <h2>The question</h2>
+  <p>In December 2021, days of heavy rain flooded large parts of Selangor and Kuala Lumpur. Tens of thousands of people left their homes, and whole townships such as Taman Sri Muda could only be reached by boat. Five years on, I wanted to ask a simple question of open data: how well served are the places that flooded, today? Can the people who live there walk to a clinic, a school or a grocery, and how often does a bus pass?</p>
+  <p>Answering it needs several layers on the same map, so the project was built in five Stages on one hexagon grid, each publishable on its own. Every step is in Python notebooks that anyone can rerun.</p>
+</section>
+
+<section>
+  <h2>The data</h2>
+  <div class="table-wrap"><table>
+    <tr><th>What</th><th>Source</th></tr>
+    <tr><td>People in each hexagon (H3, about 0.74 km&sup2;)</td><td>Kontur Population 2023, via HDX</td></tr>
+    <tr><td>Clinics, schools, parks, groceries; streets and footpaths</td><td>OpenStreetMap, via Overpass and Geofabrik</td></tr>
+    <tr><td>Rail stations</td><td>Rapid Rail and KTM Komuter, from my earlier rail project</td></tr>
+    <tr><td>Rapid KL and MRT feeder bus timetables (GTFS)</td><td>data.gov.my (Prasarana)</td></tr>
+    <tr><td>Radar images of 20 and 22 December 2021, and dry days before</td><td>Copernicus Sentinel-1, via Google Earth Engine</td></tr>
+    <tr><td>Permanent water, height above drainage, slope, built-up land</td><td>JRC Global Surface Water, MERIT Hydro, Copernicus DEM, ESA WorldCover</td></tr>
+    <tr><td>Places reported flooded</td><td>Malay Mail and Wikipedia</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Five maps on one grid</h2>
+  <p>About 4,000 hexagons cover Kuala Lumpur, Putrajaya and five Selangor districts. Each Stage adds a layer to the same hexagons, so the last one can combine them all.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Stage</th><th>Map</th><th>What each hexagon shows</th></tr>
+    <tr><td>1</td><td><a href="population.html">Where people live</a></td><td>People, as the height of a 3D column</td></tr>
+    <tr><td>2</td><td><a href="index.html">The 15-minute walk</a></td><td>How many of five everyday services are within 15 minutes' walk along real footpaths</td></tr>
+    <tr><td>3</td><td><a href="buses.html">A day of buses</a></td><td>Buses per hour within 400 m, with every bus animated through a weekday and a weekend day</td></tr>
+    <tr><td>4</td><td><a href="floods.html">The 2021 floods</a></td><td>Where radar shows a flood signal, strong (both images) or possible (one image)</td></tr>
+    <tr><td>5</td><td><a href="story.html">The story</a></td><td>A guided tour joining Stages 2 to 4: are the flooded places poorly served today?</td></tr>
+  </table></div>
+  <figure class="wide">
+    <img src="images/cs_stages.jpg" width="1812" height="1132" alt="Four maps of the Klang Valley on the same hexagon grid: population in 3D, the 15-minute walking score from red to blue, buses moving on a dark map, and the radar flood signal in blue">
+    <figcaption>Stages 1 to 4 on the same grid: people, the 15-minute walk, a day of buses, and the radar flood signal.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What the data shows</h2>
+
+  <h3>Walking reach fades away from the centre</h3>
+  <div class="figure-line"><b>10% vs 16%</b><span>of people can walk to all five everyday services, against none of them, within 15 minutes</span></div>
+  <p>Groceries and parks are within a 15-minute walk for about two in three people, clinics for under half, and a rail station for fewer than one in five. Kuala Lumpur averages 3.5 of the five services; the score falls to 1.7 in Klang and 1.4 in Sepang. The walks follow real streets and footpaths, which are on average about 1.7 times longer than a straight line.</p>
+
+  <h3>Most of the valley lives beyond a frequent bus</h3>
+  <div class="figure-line"><b>62%</b><span>of people live in a gap in the Rapid KL network</span></div>
+  <p>A gap here means fewer than four Rapid KL or MRT feeder buses an hour within 400 m in the weekday morning peak, and no rail station within a 15-minute walk. It covers 36% of people in Kuala Lumpur but over 90% in Klang and Sepang. Part of that is missing data: Smart Selangor's free buses and other operators publish no open timetables, so they could not be counted.</p>
+
+  <h3 class="flood">In towns, floodwater makes radar brighter, not darker</h3>
+  <div class="figure-line flood"><b>18</b><span>hexagons with a strong flood signal on both radar images, against 0 on two dry days</span></div>
+  <p>Open water looks dark to radar, so the first method looked only for darkening, and found almost nothing in the flooded towns. Checking known places showed why: at Taman Sri Muda almost half of the pixels became at least 3 dB brighter, because water between buildings reflects the radar back. Adding that rule, and running the identical method on two dry days as a control, gave a defensible result: 18 strong and 195 possible hexagons, against 0 and 30 on the dry days. It remains a minimum: the images came two to four days after the peak, and in central Kuala Lumpur, reported flooded, radar flags almost nothing.</p>
+
+  <h3 class="risk">The places most surely flooded are the least served</h3>
+  <div class="figure-line risk"><b>69% vs 39%</b><span>of people poorly served today, in strong flood-signal hexagons against the whole valley</span></div>
+  <p>A hexagon's people count as poorly served when its walking score is 2 or less of 5 and it is a gap in the Rapid KL network.</p>
+  <div class="table-wrap"><table>
+    <tr><th>People living in</th><th style="text-align:right">People</th><th style="text-align:right">Poorly served</th></tr>
+    <tr><td>Strong flood-signal hexagons</td><td class="num">about 47,000</td><td class="num risk">69%</td></tr>
+    <tr><td>Possible flood-signal hexagons</td><td class="num">about 941,000</td><td class="num">40%</td></tr>
+    <tr><td>All flood-signal hexagons</td><td class="num">about 988,000</td><td class="num">42%</td></tr>
+    <tr><td>The whole Klang Valley</td><td class="num">8.3 million</td><td class="num">39%</td></tr>
+  </table></div>
+  <p>Taken together, the flood-signal hexagons are only a little worse off than the valley as a whole, because the possible tier includes well-served flooded parts of Kuala Lumpur. Where the signal is strong, the picture changes: around Taman Sri Muda 58% of people in the flagged hexagons are poorly served, with an average walking score of 1.5 of 5.</p>
+
+  <h3 class="risk">Klang carries most of the weight</h3>
+  <div class="figure-line risk"><b>81% vs 6%</b><span>of people in flood-signal hexagons poorly served, Klang against Kuala Lumpur</span></div>
+  <p>Around Meru and Bukit Raja, where a road lay under 2 to 3 m of water in 2021, it is 92%, with an average walking score of 1.0 of 5 and almost no Rapid KL bus at the morning peak. Central Kuala Lumpur is the contrast: reported flooded, almost invisible to radar, and among the best served places in the valley, with an average walking score of 4.4 of 5 and about 17 buses an hour nearby. The places that flooded worst are mostly on the outer, less served side of the valley.</p>
+</section>
+
+<section>
+  <h2>Problems in the data, and how they were handled</h2>
+  <ul class="plain">
+    <li><b>Radar in towns.</b> A dark-water-only method found 9.6 km&sup2; of flooding, mostly farm ponds and construction sites. A short diagnostic at known flooded places led to the built-up brightening rule, and a dry-day control replaced guesswork in choosing the cut-off: a starting cut-off of 20% of a hexagon found no flooded hexagons at all, while 5% separated flood days from dry days cleanly.</li>
+    <li><b>Circular bus routes.</b> Placing stops along a route that returns to its start sent half of each journey to the wrong end, collapsing 363 route patterns. Stops are now placed in order with a search window ahead of the previous stop.</li>
+    <li><b>Timetables given as "every N minutes".</b> Counting the end of each period as well as the start added about 1,000 Rapid KL runs a weekday (6,788 instead of 5,798). The GTFS rule is start inclusive, end exclusive.</li>
+    <li><b>What counts as a grocery.</b> Convenience stores (mostly 7-Eleven, KK Super Mart and petrol station shops) were left out, while 99 Speedmart, tagged as a supermarket in OpenStreetMap, counts.</li>
+    <li><b>An idea set aside.</b> "Hidden barriers" (places close in a straight line but far on foot) looked promising, but the detour ratio per hexagon was too noisy because hexagon centres often fall off the street network. Only the median detour is reported.</li>
+    <li><b>Population.</b> Kontur gives Putrajaya about 8,600 people against about 110,000 in the 2020 census. The figure is kept for consistency and the underestimate is stated on every map.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Limits</h2>
+  <p>The floods are from 2021, while the services, footpaths and timetables are from 2026: the story asks how well served the flooded places are now, not during the flood. The flood signal is a minimum, and 178 of the 195 possible hexagons rest on one radar image. Only Prasarana buses have open timetables, so Klang and Sepang have more buses than shown. OpenStreetMap is mapped by volunteers and misses some private clinics outside Kuala Lumpur, and each hexagon is measured from its centre. Each map states these limits on the page.</p>
+</section>
+
+<section>
+  <h2>Where this could be useful</h2>
+  <ul class="plain">
+    <li><b>Disaster preparedness:</b> where flood-prone neighbourhoods are also far from clinics and public transport, and so harder to evacuate and supply.</li>
+    <li><b>Transport planning:</b> where new feeder bus routes or better stop coverage would reach the most people, and where open timetables from other operators would change the picture.</li>
+    <li><b>Property, insurance and retail:</b> flood exposure, walkability and transit access side by side for any neighbourhood.</li>
+  </ul>
+  <p>The same grid works for any city with open population, map and timetable data, and the radar method for any flood with a satellite pass soon after.</p>
+</section>
+
+<section>
+  <h2>About</h2>
+  <p>Lik Ren Tai applies data science in two fields: environmental science and railway systems. This project, the second after <a href="https://likrentai.github.io/klmobility/case-study.html">a case study of rail use in the Klang Valley</a>, joins both: satellite data on a natural hazard, and the services people rely on every day. Built with Python, pandas, GeoPandas, H3, pydeck, OSMnx, pyosmium, SciPy and Google Earth Engine, with deck.gl for the bus and story pages.</p>
+  <p class="terminus">Data: &copy; OpenStreetMap contributors (ODbL), Kontur Population (CC BY 4.0), Prasarana GTFS via data.gov.my (CC BY 4.0), Copernicus Sentinel-1 (ESA), JRC Global Surface Water, MERIT Hydro, Copernicus DEM, ESA WorldCover (CC BY 4.0). Basemaps &copy; CARTO.</p>
+</section>
+
+</div>
+</main>
+</body>
+</html>
