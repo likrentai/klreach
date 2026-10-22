@@ -9,6 +9,7 @@ Interactive maps of where people live in Malaysia's Klang Valley, which everyday
 - Where people live: https://likrentai.github.io/klreach/population.html
 - A day of buses: https://likrentai.github.io/klreach/buses.html
 - The 2021 floods: https://likrentai.github.io/klreach/floods.html
+- **Read the case study:** https://likrentai.github.io/klreach/case-study.html (also as a [PDF](docs/case-study.pdf))
 
 ![Stage 5, the story: a guided map of the flood-signal hexagons around Taman Sri Muda, coloured red where people are poorly served today and blue where they are not, with the story panel and Next and Back buttons](docs/images/stage5_story.png)
 *Stage 5: flooded in 2021, served today? A guided story in eight steps, ending in a map to explore.*
